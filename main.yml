@@ -1,0 +1,38 @@
+---
+- hosts: all
+  tasks:
+    - name: install gitlab-ce dependencies packages
+      apt: pkg={{ item }} state=latest
+      with_items:
+        - curl
+        - openssh-server
+        - ca-certificates
+        - postfix
+    - name: Add gitlab user and add it to sudo
+      user: name=gitlabadmin
+            state=present
+            createhome=yes
+      become: yes
+      become_method: "sudo"
+    - name: get gitlab-ce installer
+      get_url: url=https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh dest=/home/gitlabadmin/install_gitlab-ce.sh mode="a+x"
+
+    - name: install gitlab-ce
+      shell: /home/gitlabadmin/install_gitlab-ce.sh
+
+    - name: install gitlab-ce package
+      apt: pkg={{ item }} state=latest
+      with_items:
+        - gitlab-ce
+
+    - name: configure gitlab-ce
+      shell: gitlab-ctl reconfigure
+
+    - name: start gitlab-ce
+      shell: sudo gitlab-ctl start
+
+    - name: default username
+      debug: msg="gitlabadmin"
+
+ # - name: show gitlab-ce credentials
+     # debuggitlabadin: msg="Default username are root 
